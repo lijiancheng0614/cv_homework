@@ -91,9 +91,11 @@ CIElab：忽略亮度L通道，并且将a及b通道量化为50个区间。
 
 \section{实验环境}
 
-操作系统：Windows 10
+操作系统：Ubuntu 14.04.3 LTS
 
-开发环境：Python 2.7.11 + OpenCV 3.1.0
+（刚开始用Windows 10，然后发现用Python的PIL读取jpg文件时得到的RGB编码与Ubuntu下不同，而bmp文件却是一致的。经测试在Ubuntu下用Python得到jpg文件的RGB编码与mspaint一致，故改用Ubuntu。）
+
+开发环境：Python 2.7.6 + OpenCV 2.4.11
 
 Python Library:
 
@@ -101,9 +103,9 @@ Python Library:
 
 \setlength{\itemsep}{0pt}
 
-\item numpy 1.10.4
+\item numpy 1.10.2
 
-\item matplotlib 1.5.1
+\item matplotlib 1.5.0
 
 \item Pillow 3.1.1
 
@@ -225,6 +227,8 @@ Python Library:
 
 比较图片对分别使用r1.jpg自身比较、r1.jpg与r2.jpg、s1.jpg与s2.jpg、r1.jpg与s1.jpg、r2.jpg与s2.jpg。
 
+具体步骤为：读取图片，转换相应的颜色空间，获取直方图并归一化（normalize），使用相似性度量方法计算。
+
 具体实现见\lstinline[language=bash]{hw1.py的demo3()}。
 
 \begin{enumerate}
@@ -238,9 +242,9 @@ Python Library:
     \caption{r1.jpg, r1.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        B通道 & 1.0 & 10.63 & 0.0 & 0.0 \\
+        B通道 & 1.0 & 10.62 & 0.0 & 0.0 \\
         G通道 & 1.0 & 10.12 & 0.0 & 0.0 \\
-        R通道 & 1.0 & 10.94 & 0.0 & 1.054e-08 \\
+        R通道 & 1.0 & 10.92 & 0.0 & 0.0 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -248,9 +252,9 @@ Python Library:
     \caption{r1.jpg, r2.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        B通道 & 0.2907 & 5.064 & 35.16 & 0.5024 \\
-        G通道 & 0.7852 & 7.101 & 4.746 & 0.2463 \\
-        R通道 & 0.7312 & 7.107 & 4.398 & 0.2895 \\
+        B通道 & 0.2889 & 5.064 & 32.18 & 0.5027 \\
+        G通道 & 0.7849 & 7.105 & 4.803 & 0.2467 \\
+        R通道 & 0.7335 & 7.114 & 4.473 & 0.2891 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -258,9 +262,9 @@ Python Library:
     \caption{s1.jpg, s2.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        B通道 & 0.5583 & 4.677 & 35.26 & 0.4592 \\
-        G通道 & 0.1445 & 7.869 & 481.6 & 0.3826 \\
-        R通道 & 0.2105 & 3.517 & 102.3 & 0.4622 \\
+        B通道 & 0.5591 & 4.681 & 35.92 & 0.4597 \\
+        G通道 & 0.1419 & 7.873 & 271.7 & 0.3835 \\
+        R通道 & 0.2032 & 3.495 & 100.3 & 0.4631 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -268,9 +272,9 @@ Python Library:
     \caption{r1.jpg, s1.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        B通道 & -0.4951 & 1.334 & 457.1 & 0.8178 \\
-        G通道 & 0.4541 & 6.98 & 31.59 & 0.336 \\
-        R通道 & -0.3565 & 3.497 & 701.3 & 0.6093 \\
+        B通道 & -0.4942 & 1.33 & 399.2 & 0.8178 \\
+        G通道 & 0.4537 & 6.986 & 32.23 & 0.3361 \\
+        R通道 & -0.3558 & 3.487 & 439.3 & 0.6114 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -278,9 +282,9 @@ Python Library:
     \caption{r2.jpg, s2.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        B通道 & -0.2627 & 2.13 & 43.21 & 0.7485 \\
-        G通道 & 0.02332 & 5.081 & 185.2 & 0.4638 \\
-        R通道 & -0.157 & 1.771 & 73.88 & 0.6889 \\
+        B通道 & -0.262 & 2.141 & 43.36 & 0.7489 \\
+        G通道 & 0.02588 & 5.089 & 192.7 & 0.4629 \\
+        R通道 & -0.1566 & 1.772 & 76.47 & 0.6888 \\
     \end{tabular}
 \end{table}
 
@@ -293,8 +297,8 @@ Python Library:
     \caption{r1.jpg, r1.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        H通道 & 1.0 & 5.281 & 0.0 & 0.0 \\
-        S通道 & 1.0 & 11.95 & 0.0 & 0.0 \\
+        H通道 & 1.0 & 5.177 & 0.0 & 0.0 \\
+        S通道 & 1.0 & 11.89 & 0.0 & 0.0 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -302,8 +306,8 @@ Python Library:
     \caption{r1.jpg, r2.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        H通道 & 0.3516 & 2.821 & 480.8 & 0.6111 \\
-        S通道 & 0.373 & 4.196 & 26.4 & 0.5565 \\
+        H通道 & 0.3443 & 2.764 & 607.4 & 0.6227 \\
+        S通道 & 0.365 & 4.133 & 39.05 & 0.5627 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -311,8 +315,8 @@ Python Library:
     \caption{s1.jpg, s2.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        H通道 & 0.6228 & 2.712 & 47.83 & 0.4573 \\
-        S通道 & 0.216 & 4.175 & 14.03 & 0.4079 \\
+        H通道 & 0.608 & 2.636 & 57.13 & 0.4693 \\
+        S通道 & 0.2109 & 4.175 & 14.8 & 0.4123 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -320,8 +324,8 @@ Python Library:
     \caption{r1.jpg, s1.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        H通道 & -0.1071 & 0.3064 & 1.008e+03 & 0.8955 \\
-        S通道 & -0.5614 & 3.535 & 691.6 & 0.6223 \\
+        H通道 & -0.1053 & 0.2805 & 605.8 & 0.9074 \\
+        S通道 & -0.5593 & 3.497 & 575.5 & 0.6268 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -329,12 +333,12 @@ Python Library:
     \caption{r2.jpg, s2.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        H通道 & 0.3744 & 2.924 & 13.38 & 0.5791 \\
-        S通道 & 0.1563 & 2.124 & 7.499 & 0.6853 \\
+        H通道 & 0.3748 & 2.908 & 12.75 & 0.5823 \\
+        S通道 & 0.1554 & 2.094 & 7.748 & 0.6871 \\
     \end{tabular}
 \end{table}
 
-\item Lab直方图对比
+\item CIELab直方图对比
 
 结果如表11-15所示。
 
@@ -343,8 +347,8 @@ Python Library:
     \caption{r1.jpg, r1.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        a*通道 & 1.0 & 1.818 & 0.0 & 0.0 \\
-        b*通道 & 1.0 & 2.617 & 0.0 & 0.0 \\
+        a*通道 & 1.0 & 1.792 & 0.0 & 1.054e-08 \\
+        b*通道 & 1.0 & 2.595 & 0.0 & 0.0 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -352,8 +356,8 @@ Python Library:
     \caption{r1.jpg, r2.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        a*通道 & 0.6681 & 0.9252 & 4.717 & 0.4701 \\
-        b*通道 & 0.3245 & 0.872 & 41.15 & 0.6797 \\
+        a*通道 & 0.6671 & 0.9079 & 6.052 & 0.4784 \\
+        b*通道 & 0.3151 & 0.841 & 81.75 & 0.6894 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -361,8 +365,8 @@ Python Library:
     \caption{s1.jpg, s2.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        a*通道 & 0.7929 & 1.699 & 0.5266 & 0.4261 \\
-        b*通道 & 0.403 & 1.472 & 4.668 & 0.536 \\
+        a*通道 & 0.7837 & 1.675 & 0.5608 & 0.4285 \\
+        b*通道 & 0.4061 & 1.465 & 4.474 & 0.5354 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -370,8 +374,8 @@ Python Library:
     \caption{r1.jpg, s1.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        a*通道 & 0.7157 & 1.252 & 94.19 & 0.3796 \\
-        b*通道 & -0.07255 & 0.2794 & 15.14 & 0.9042 \\
+        a*通道 & 0.7133 & 1.23 & 20.19 & 0.392 \\
+        b*通道 & -0.07661 & 0.2636 & 29.49 & 0.9078 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -379,8 +383,8 @@ Python Library:
     \caption{r2.jpg, s2.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        a*通道 & 0.7548 & 1.18 & 6.558 & 0.5439 \\
-        b*通道 & 0.5331 & 1.334 & 6.487 & 0.6409 \\
+        a*通道 & 0.7458 & 1.159 & 7.76 & 0.5482 \\
+        b*通道 & 0.5326 & 1.307 & 8.433 & 0.6422 \\
     \end{tabular}
 \end{table}
 
@@ -403,9 +407,9 @@ Python Library:
     \caption{r1.jpg, r2.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        B通道 & 0.9127 & 11.26 & 1.997 & 0.1945 \\
-        G通道 & 0.9834 & 11.61 & 0.5271 & 0.08804 \\
-        R通道 & 0.9787 & 11.58 & 0.7901 & 0.1181 \\
+        B通道 & 0.9124 & 11.26 & 1.998 & 0.1944 \\
+        G通道 & 0.9833 & 11.61 & 0.5281 & 0.08815 \\
+        R通道 & 0.9788 & 11.58 & 0.7862 & 0.1178 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -413,9 +417,9 @@ Python Library:
     \caption{s1.jpg, s2.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        B通道 & 0.9223 & 6.891 & 2.103 & 0.2331 \\
-        G通道 & 0.9733 & 11.36 & 1.692 & 0.09032 \\
-        R通道 & 0.9615 & 14.75 & 1.004 & 0.05538 \\
+        B通道 & 0.9226 & 6.896 & 2.097 & 0.2329 \\
+        G通道 & 0.9734 & 11.36 & 1.691 & 0.09031 \\
+        R通道 & 0.9617 & 14.75 & 1.02 & 0.0554 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -423,9 +427,9 @@ Python Library:
     \caption{r1.jpg, s1.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        B通道 & 0.6382 & 7.313 & 6.939 & 0.4101 \\
-        G通道 & 0.9498 & 11.08 & 0.6984 & 0.0854 \\
-        R通道 & 0.8909 & 11.58 & 716.1 & 0.27 \\
+        B通道 & 0.6379 & 7.311 & 6.941 & 0.4102 \\
+        G通道 & 0.9498 & 11.08 & 0.6977 & 0.08537 \\
+        R通道 & 0.8906 & 11.57 & 734.5 & 0.2704 \\
     \end{tabular}
 \end{table}
 \begin{table}[h!]
@@ -433,12 +437,11 @@ Python Library:
     \caption{r2.jpg, s2.jpg}
     \begin{tabular}{ccccc}
         methods & Correlation & Intersection & Chi-Square & Bhattacharyya \\ \hline
-        B通道 & 0.6508 & 5.719 & 7.11 & 0.4684 \\
-        G通道 & 0.9259 & 10.59 & 18.18 & 0.1712 \\
-        R通道 & 0.8735 & 10.2 & 4.47e+03 & 0.368 \\
+        B通道 & 0.651 & 5.721 & 7.104 & 0.4684 \\
+        G通道 & 0.926 & 10.59 & 18.15 & 0.1711 \\
+        R通道 & 0.8738 & 10.21 & 3.336e+03 & 0.368 \\
     \end{tabular}
 \end{table}
-
 
 \item CCV直方图对比
 

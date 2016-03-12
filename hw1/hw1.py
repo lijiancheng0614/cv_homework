@@ -27,10 +27,10 @@ def demo1():
             fd.write(' '.join(['{:3}'.format(j) for j in i]) + '\n')
         fd.close()
     # process CIELab
-    imgLab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
+    imgLAB = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
     for k in range(3):
         fd = open(output_filepath[k + 6], 'w')
-        for i in imgLab[:, :, k]:
+        for i in imgLAB[:, :, k]:
             fd.write(' '.join(['{:3}'.format(j) for j in i]) + '\n')
         fd.close()
 
@@ -58,10 +58,10 @@ def demo2():
         plt.subplot(212), plt.bar(x, hist[1])
         plt.show()
         # process CIELab
-        imgLab = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
+        imgLAB = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
         hist = []
         for k in range(1, 3):
-            hist.append(cv2.calcHist([imgLab], [k], None, [50], [0, 256]))
+            hist.append(cv2.calcHist([imgLAB], [k], None, [50], [0, 256]))
         x = np.arange(50) + 0.5
         plt.subplot(211), plt.bar(x, hist[0])
         plt.subplot(212), plt.bar(x, hist[1])
@@ -106,7 +106,8 @@ def demo3():
     input_filepath = ['r1.jpg', 'r2.jpg', 's1.jpg', 's2.jpg']
     input_filepath = [os.path.join('in', i) for i in input_filepath]
     compare_pair_list = [(0, 0), (0, 1), (2, 3), (0, 2), (1, 3)]
-    methods = [cv2.HISTCMP_CORREL, cv2.HISTCMP_INTERSECT, cv2.HISTCMP_CHISQR, cv2.HISTCMP_BHATTACHARYYA]
+    methods = [cv2.cv.CV_COMP_CORREL, cv2.cv.CV_COMP_INTERSECT, \
+        cv2.cv.CV_COMP_CHISQR, cv2.cv.CV_COMP_BHATTACHARYYA]
     if not os.path.isdir('out'):
         os.makedirs('out')
     output_filepath = os.path.join('out', 'demo3.txt')
@@ -119,7 +120,7 @@ def demo3():
         hist = [[cv2.calcHist([img[i]], [k], None, [256], [0, 256]) \
             for k in range(3)] for i in range(2)]
         demo3_process(fd, hist, methods, \
-            '{}, {}'.format(input_filepath[a].split('\\')[-1], input_filepath[b].split('\\')[-1]), LATEX_STYLE)
+            '{}, {}'.format(input_filepath[a].split(os.sep)[-1], input_filepath[b].split(os.sep)[-1]), LATEX_STYLE)
     fd.write('\n\n')
     for a, b in compare_pair_list:
         # process HSV
@@ -130,18 +131,18 @@ def demo3():
         for i in range(2):
             hist[i].append(cv2.calcHist([imgHSV[i]], [1], None, [256], [0, 256]))
         demo3_process(fd, hist, methods, \
-            '{}, {}'.format(input_filepath[a].split('\\')[-1], input_filepath[b].split('\\')[-1]), LATEX_STYLE)
+            '{}, {}'.format(input_filepath[a].split(os.sep)[-1], input_filepath[b].split(os.sep)[-1]), LATEX_STYLE)
     fd.write('\n\n')
     for a, b in compare_pair_list:
         # process CIELab
         img = [cv2.imread(input_filepath[a]), cv2.imread(input_filepath[b])]
-        imgLab = [cv2.cvtColor(i, cv2.COLOR_BGR2Lab) for i in img]
+        imgLAB = [cv2.cvtColor(i, cv2.COLOR_BGR2LAB) for i in img]
         hist = [[] for i in range(2)]
         for i in range(2):
             for k in range(1, 3):
-                hist[i].append(cv2.calcHist([imgLab[i]], [k], None, [50], [0, 256]))
+                hist[i].append(cv2.calcHist([imgLAB[i]], [k], None, [50], [0, 256]))
         demo3_process(fd, hist, methods, \
-            '{}, {}'.format(input_filepath[a].split('\\')[-1], input_filepath[b].split('\\')[-1]), LATEX_STYLE)
+            '{}, {}'.format(input_filepath[a].split(os.sep)[-1], input_filepath[b].split(os.sep)[-1]), LATEX_STYLE)
     fd.write('\n\n')
     for a, b in compare_pair_list:
         # process RGB cumulative histogram
@@ -149,7 +150,7 @@ def demo3():
         hist = [[cv2.calcHist([img[i]], [k], None, [256], [0, 256]).cumsum() \
             for k in range(3)] for i in range(2)]
         demo3_process(fd, hist, methods, \
-            '{}, {}'.format(input_filepath[a].split('\\')[-1], input_filepath[b].split('\\')[-1]), LATEX_STYLE)
+            '{}, {}'.format(input_filepath[a].split(os.sep)[-1], input_filepath[b].split(os.sep)[-1]), LATEX_STYLE)
     fd.write('\n\n')
     fd.close()
 
