@@ -22,96 +22,66 @@
 import os
 import numpy as np
 from PIL import Image
-from itertools import product
-from collections import defaultdict
 
 
 class CCV(object):
     MAX_VALUE_PIXEL = 256
     NUM_BINS_EACH_COLOR = 4
     BIN_WIDTH = MAX_VALUE_PIXEL / NUM_BINS_EACH_COLOR
-    TAU = 25
+    global dx
+    dx = [-1, 0, 1, 0]
+    global dy
+    dy = [0, -1, 0, 1]
     def __init__(self, image_file):
-        self._im_org = Image.open(image_file)
-        self._w, self._h = self._im_org.size
-        self._discretized_im = np.zeros((self._h, self._w), dtype=int)
-        self._labeled_im = np.zeros((self._h, self._w), dtype=int)
-        self._label_to_color = defaultdict(list)
-        self.ccv_vector = defaultdict(list)
-    def extract(self):
-        self.__blur()
-        self.__discretize_colorspace()
-        self.__compute_connected_components()
-        self.__gen_ccv_vector()
-    def __blur(self):
-        self._im = self._im_org.copy()
-        for y in range(1, self._h - 1):
-            for x in range(1, self._w - 1):
-                adj_pixels = [self._im_org.getpixel((i, j))
-                              for i in range(x - 1, x + 2)
-                              for j in range(y - 1, y + 2)]
-                self._im.putpixel((x, y), \
-                    tuple(map(int, np.mean(adj_pixels, 0).tolist())))
-    def __discretize_colorspace(self):
-        for y, x in product(*map(range, (self._h, self._w))):
-            # idx = R + G * 4 + B * 16
-            idx = self.__getidx(x, y, 0) + \
-                  self.__getidx(x, y, 1) + \
-                  self.__getidx(x, y, 2)
-            self._discretized_im[y][x] = idx
-    def __getidx(self, x, y, ch = 0):
-        idx = self._im.getpixel((x, y))[ch] / self.BIN_WIDTH
-        return idx if ch == 0 else idx * (self.NUM_BINS_EACH_COLOR ** ch)
-    def __compute_connected_components(self):
-        self._current_label = 0
-        for y, x in product(*map(range, (self._h, self._w))):
-            checklist, xylist = self.__get_checklist(x, y)
-            current_color = self._discretized_im[y][x]
-            if current_color in checklist:
-                # assign same label from labeled_im
-                idx = checklist.index(current_color)
-                cx, cy = xylist[idx][0], xylist[idx][1]
-                self._labeled_im[y][x] = self._labeled_im[cy][cx]
-            else:
-                # assign new label
-                self._labeled_im[y][x] = self._current_label
-                self._label_to_color[self._current_label] = current_color
-                self._current_label += 1
-    def __get_checklist(self, x, y):
-        checklist = []
-        xylist = []
-        # above left
-        if x > 0 and y > 0:
-            checklist.append(self._discretized_im[y - 1][x - 1])
-            xylist.append([x - 1, y - 1])
-        # above
-        if y > 0:
-            checklist.append(self._discretized_im[y - 1][x])
-            xylist.append([x, y - 1])
-        # above right
-        if x < self._w - 1 and y > 0:
-            checklist.append(self._discretized_im[y - 1][x + 1])
-            xylist.append([x + 1, y - 1])
-        # left
-        if x > 0:
-            checklist.append(self._discretized_im[y][x - 1])
-            xylist.append([x - 1, y])
-        return checklist, xylist
-    def __gen_ccv_vector(self):
-        for label in range(self._current_label):
-            s = self._labeled_im[np.where(self._labeled_im == label)].size
-            color = self._label_to_color[label]
-            if not self.ccv_vector[color]:
-                self.ccv_vector[color] = list((0, 0))
-            k = 0 if s >= self.TAU else 1
-            self.ccv_vector[color][k] += s
+        self.img = Image.open(image_file)
+        self.w, self.h = self.img.size
+        self.tau = self.w * self.h * 0.01
+    def get_vector(self):
+        # return ccv_vector: a list of (alpha, beta)
+        self.discretized_img = np.zeros((self.w, self.h), dtype=int)
+        ccv_vector = [list((0, 0)) for i in range(self.NUM_BINS_EACH_COLOR ** 3)]
+        for x in range(self.w):
+            for y in range(self.h):
+                # 1. blur
+                color = self.img.getpixel((x, y))
+                if x > 0 and x < self.w - 1 and y > 0 and y < self.h - 1:
+                    adj_pixels = [self.img.getpixel((i, j))
+                                  for i in range(x - 1, x + 2)
+                                  for j in range(y - 1, y + 2)]
+                    color = tuple(map(int, np.mean(adj_pixels, 0).tolist()))
+                # 2. discretize colorspace: R + G * 4 + B * 16
+                self.discretized_img[x][y] = sum([color[i] / self.BIN_WIDTH \
+                    * (self.NUM_BINS_EACH_COLOR ** i) for i in range(3)])
+        # 3. compute connected components, determine coherent/incoherent
+        self.visited_img = np.zeros((self.w, self.h), dtype=bool)
+        self.component = list() # a list of (discretized_color, count)
+        for x in range(self.w):
+            for y in range(self.h):
+                if not self.visited_img[x][y]:
+                    self.visited_img[x][y] = True
+                    self.component.append([self.discretized_img[x][y], 1])
+                    self.__floodfill(x, y)
+        # 4. compute ccv vector
+        for i in range(len(self.component)):
+            color, s = self.component[i]
+            k = 0 if s >= self.tau else 1
+            ccv_vector[color][k] += s
+        return ccv_vector
+    def __floodfill(self, x, y):
+        q = [(x, y)]
+        while q:
+            (x, y) = q.pop(0)
+            for k in range(4):
+                xx = x + dx[k]
+                yy = y + dy[k]
+                if xx >= 0 and xx < self.w and yy >= 0 and yy < self.h and not self.visited_img[xx][yy] \
+                    and self.discretized_img[xx][yy] == self.component[-1][0]:
+                    self.visited_img[xx][yy] = True
+                    self.component[-1][1] += 1
+                    q.append((xx, yy))
 
-
-def main():
-    ccv = CCV('lena.bmp')
-    ccv.extract()
-    for k, v in sorted(ccv.ccv_vector.items()):
-        print(k, v)
 
 if __name__ == '__main__':
-    main()
+    # ccv = CCV('lena.bmp')
+    ccv = CCV('1.jpg')
+    print(ccv.get_vector())
