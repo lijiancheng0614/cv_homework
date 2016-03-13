@@ -147,7 +147,15 @@ def demo3_BGRch(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE):
             '{}, {}'.format(input_filepath[a].split(os.sep)[-1], input_filepath[b].split(os.sep)[-1]), LATEX_STYLE)
     fd.write('\n\n')
 
-def demo3_CCV(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE):
+def L1_distance(a, b):
+    # return 2d-array L1 distance
+    l1_distance = 0
+    for i in range(len(a)):
+        for j in range(len(a[i])):
+            l1_distance += abs(a[i][j] - b[i][j])
+    return l1_distance
+
+def demo3_CCV(input_filepath, fd, LATEX_STYLE):
     # process comparing CCV with L1 distance
     from ccv import CCV
     caption = 'CCV-L1'
@@ -173,10 +181,7 @@ def demo3_CCV(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE):
         for b in range(len(input_filepath)):
             ccv = [CCV(input_filepath[a]).get_vector(), \
                 CCV(input_filepath[b]).get_vector()]
-            l1_distance = 0
-            for i in range(len(ccv[0])):
-                l1_distance += abs(ccv[0][i][0] - ccv[1][i][0]) + \
-                    abs(ccv[0][i][1] - ccv[1][i][1])
+            l1_distance = L1_distance(ccv[0], ccv[1])
             if LATEX_STYLE:
                 fd.write(' & {}'.format(l1_distance))
             else:
@@ -190,7 +195,8 @@ def demo3_CCV(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE):
         fd.write(r'\end{table}')
     fd.write('\n\n')
 
-def demo3_CRH(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE):
+def demo3_CRH(input_filepath, fd, LATEX_STYLE):
+    # process comparing Centering Refinement RGB histogram with L1 distance
     from crh import CRH
     caption = 'Centering Refinement Histogram-L1'
     if LATEX_STYLE:
@@ -215,10 +221,7 @@ def demo3_CRH(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE):
         for b in range(len(input_filepath)):
             crh = [CRH(input_filepath[a]).get_vector(), \
                 CRH(input_filepath[b]).get_vector()]
-            l1_distance = 0
-            for i in range(len(crh[0])):
-                l1_distance += abs(crh[0][i][0] - crh[1][i][0]) + \
-                    abs(crh[0][i][1] - crh[1][i][1])
+            l1_distance = L1_distance(crh[0], crh[1])
             if LATEX_STYLE:
                 fd.write(' & {}'.format(l1_distance))
             else:
@@ -232,7 +235,8 @@ def demo3_CRH(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE):
         fd.write(r'\end{table}')
     fd.write('\n\n')
 
-def demo3_CCDR(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE):
+def demo3_CCDR(input_filepath, fd, LATEX_STYLE):
+    # process comparing Color Coherence Distance Refinement with L1 distance
     from ccdr import CCDR
     caption = 'Color Coherence Distance Refinement-L1'
     if LATEX_STYLE:
@@ -257,10 +261,7 @@ def demo3_CCDR(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE):
         for b in range(len(input_filepath)):
             ccdr = [CCDR(input_filepath[a]).get_vector(), \
                 CCDR(input_filepath[b]).get_vector()]
-            l1_distance = 0
-            for i in range(len(ccdr[0])):
-                for j in range(4):
-                    l1_distance += abs(ccdr[0][i][j] - ccdr[1][i][j])
+            l1_distance = L1_distance(ccdr[0], ccdr[1])
             if LATEX_STYLE:
                 fd.write(' & {}'.format(l1_distance))
             else:
@@ -291,12 +292,131 @@ def demo3():
     demo3_HSV(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE)
     demo3_LAB(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE)
     demo3_BGRch(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE)
-    demo3_CCV(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE)
-    demo3_CRH(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE)
-    demo3_CCDR(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE)
-    # process comparing Centering Refinement RGB histogram with L1 distance
+    demo3_CCV(input_filepath, fd, LATEX_STYLE)
+    demo3_CRH(input_filepath, fd, LATEX_STYLE)
+    demo3_CCDR(input_filepath, fd, LATEX_STYLE)
+    fd.close()
+
+def compare_hist(query_image, image_set, hist_type, method):
+    img = cv2.imread(query_image)
+    img_set = [cv2.imread(i) for i in image_set]
+    if hist_type == 0:
+        # BGR
+        hist = [cv2.calcHist([img], [k], None, [256], [0, 256]) for k in range(3)]
+        for i in hist:
+            cv2.normalize(i, i)
+        hist = np.mean(hist, 0)
+        hist_set = [[cv2.calcHist([i], [k], None, [256], [0, 256]) for k in range(3)] \
+            for i in img_set]
+        for i in hist_set:
+            for j in i:
+                cv2.normalize(j, j)
+        hist_set = [np.mean(i, 0) for i in hist_set]
+    elif hist_type == 1:
+        # HSV
+        imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        imgHSV_set = [cv2.cvtColor(i, cv2.COLOR_BGR2HSV) for i in img_set]
+        hist = cv2.calcHist([img], [0, 1], None, [180, 256], [0, 180, 0, 256])
+        cv2.normalize(hist, hist)
+        hist_set = [cv2.calcHist([i], [0, 1], None, [180, 256], [0, 180, 0, 256]) \
+            for i in img_set]
+        for i in hist_set:
+            cv2.normalize(i, i)
+    else:
+        # BGR cumulative
+        hist = [cv2.calcHist([img], [k], None, [256], [0, 256]).cumsum() for k in range(3)]
+        for i in hist:
+            cv2.normalize(i, i)
+        hist = np.mean(hist, 0)
+        hist_set = [[cv2.calcHist([i], [k], None, [256], [0, 256]).cumsum() for k in range(3)] \
+            for i in img_set]
+        for i in hist_set:
+            for j in i:
+                cv2.normalize(j, j)
+        hist_set = [np.mean(i, 0) for i in hist_set]
+    d = [cv2.compareHist(hist, i, method) for i in hist_set]
+    if method == cv2.cv.CV_COMP_CORREL or method == cv2.cv.CV_COMP_INTERSECT:
+        return np.argmax(d)
+    return np.argmin(d)
+
+def CBIR(query_image, image_set, method):
+    comp_method = [cv2.cv.CV_COMP_CORREL, cv2.cv.CV_COMP_INTERSECT, \
+        cv2.cv.CV_COMP_CHISQR, cv2.cv.CV_COMP_BHATTACHARYYA]
+    if method < 12:
+        return compare_hist(query_image, image_set, method // 4, comp_method[method % 4])
+    elif method == 12:
+        from ccv import CCV
+        ccv = CCV(query_image).get_vector()
+        ccv_set = [CCV(i).get_vector() for i in image_set]
+        l1_distance = [L1_distance(ccv, i) for i in ccv_set]
+        return np.argmin(l1_distance)
+    elif method == 13:
+        from crh import CRH
+        crh = CRH(query_image).get_vector()
+        crh_set = [CRH(i).get_vector() for i in image_set]
+        l1_distance = [L1_distance(crh, i) for i in crh_set]
+        return np.argmin(l1_distance)
+    elif method == 14:
+        from ccdr import CCDR
+        ccdr = CCDR(query_image).get_vector()
+        ccdr_set = [CCDR(i).get_vector() for i in image_set]
+        l1_distance = [L1_distance(ccdr, i) for i in ccdr_set]
+        return np.argmin(l1_distance)
+    return 0
+
+def demo4():
+    # setting
+    input_filepath = ['r1.jpg', 'r2.jpg', 's1.jpg', 's2.jpg']
+    input_filepath = [os.path.join('in', i) for i in input_filepath]
+    methods = [cv2.cv.CV_COMP_CORREL, cv2.cv.CV_COMP_INTERSECT, \
+        cv2.cv.CV_COMP_CHISQR, cv2.cv.CV_COMP_BHATTACHARYYA]
+    if not os.path.isdir('out'):
+        os.makedirs('out')
+    output_filepath = os.path.join('out', 'demo4.txt')
+    LATEX_STYLE = True
+    # process
+    fd = open(output_filepath, 'w')
+    caption = 'CBIR'
+    if LATEX_STYLE:
+        fd.write(r'\begin{table}[h!]')
+        fd.write('\n')
+        fd.write(r'    \centering')
+        fd.write('\n')
+        fd.write('    \caption{{{}}}'.format(caption))
+        fd.write('\n')
+        fd.write(r'    \begin{tabular}{ccccc}')
+        fd.write('\n')
+        fd.write(r'         & r1 & r2 & s1 & s2 \\ \hline')
+        fd.write('\n')
+    else:
+        fd.write('{}\n'.format(caption))
+        fd.write('   r1 r2 r3 r4\n')
+    for method in range(15):
+        if LATEX_STYLE:
+            fd.write('        {:2}'.format(method))
+        else:
+            fd.write('{:2}'.format(method))
+        for k in range(len(input_filepath)):
+            query_image = input_filepath[k]
+            image_set = [i for i in input_filepath]
+            image_set.pop(k)
+            i = CBIR(query_image, image_set, method)
+            i = image_set[i].split(os.sep)[-1].rstrip('.jpg')
+            if LATEX_STYLE:
+                fd.write(' & {}'.format(i))
+            else:
+                fd.write(' {}'.format(i))
+        if LATEX_STYLE:
+            fd.write(r' \\ \hline')
+        fd.write('\n')
+    if LATEX_STYLE:
+        fd.write(r'    \end{tabular}')
+        fd.write('\n')
+        fd.write(r'\end{table}')
+    fd.write('\n\n')
     fd.close()
 
 # demo1()
 # demo2()
-demo3()
+# demo3()
+demo4()

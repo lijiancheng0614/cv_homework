@@ -506,16 +506,64 @@ Color Coherence Distance Refinement指论文\cite{ref2}中的Successive Refineme
 
 \subsection{基于颜色的图像检索}
 
-基于颜色的图像检索
+基于颜色的图像检索，属于基于内容的图像检索——即CBIR(Content-based image retrieval)。具体来说，指用户输入一张图片，查找某个图片集中具有相同或相似颜色特征的其他图片。
 
+这里使用RGB颜色直方图、HSV量化后的颜色直方图、RGB颜色累加直方图、CCV、Centering Refinement、Color Coherence Distance Refinement这6种方法进行图像检索。其中，前三种方法分别使用Correlation、Intersection、Chi-Square statistic、Bhattacharyya4种方法进行相似性度量，后三种方法使用L1距离进行相似性度量。
+
+由于图片集只有r1.jpg, r2.jpg, s1.jpg, s2.jpg、r1.jpg与s1.jpg、r2.jpg与s2.jpg这4张图片，故这里对每张图片、每种方法都检索一张图片，并以表格的形式呈现结果。
+
+具体实现见\lstinline[language=bash]{hw1.py的demo4()}。
+
+结果如表24所示。
+
+\begin{table}[h!]
+    \centering
+    \caption{CBIR}
+    \begin{tabular}{ccccccc}
+        method & compare_method & r1 & r2 & s1 & s2 \\ \hline
+        RGB直方图    & Correlation   & r2 & r1 & s2 & s1 \\ \hline
+        RGB直方图    & Intersection  & r2 & r1 & s2 & s1 \\ \hline
+        RGB直方图    & Chi-Square    & r2 & s2 & r2 & s1 \\ \hline
+        RGB直方图    & Bhattacharyya & r2 & r1 & s2 & s1 \\ \hline
+        HSV量化直方图 & Correlation   & r2 & r1 & s2 & s1 \\ \hline
+        HSV量化直方图 & Intersection  & r2 & r1 & r2 & s1 \\ \hline
+        HSV量化直方图 & Chi-Square    & s1 & s2 & s2 & r2 \\ \hline
+        HSV量化直方图 & Bhattacharyya & r2 & r1 & s2 & s1 \\ \hline
+        RGB累加直方图 & Correlation   & r2 & r1 & s2 & s1 \\ \hline
+        RGB累加直方图 & Intersection  & r2 & r1 & s2 & s1 \\ \hline
+        RGB累加直方图 & Chi-Square    & r2 & r1 & s2 & s1 \\ \hline
+        RGB累加直方图 & Bhattacharyya & r2 & r1 & s2 & s1 \\ \hline
+        CCV         & L1            & r2 & r1 & s2 & s1 \\ \hline
+        CR          & L1            & r2 & r1 & s2 & s1 \\ \hline
+        CCDR        & L1            & r2 & r1 & r2 & s1 \\ \hline
+    \end{tabular}
+\end{table}
+
+观察表格知，大部分方法都能得到较好的结果。
+
+纵向比较知，
+
+对r1.jpg，只有HSV量化直方图+Chi-Square没有得到最相似图片。
+
+对r2.jpg，只有RGB和HSV量化直方图+Chi-Square都没有得到最相似图片。
+
+对s1.jpg，则是RGB直方图+Chi-Square、HSV量化直方图+Intersection、CCDR+L1没有得到最相似图片。
+
+对s2.jpg，只有HSV量化直方图+Chi-Square没有得到最相似图片。
+
+横向比较知，
+
+HSV量化直方图+Chi-Square效果最不好。Chi-Square相对其它方法效果没那么好，HSV量化直方图没有RGB直方图效果好，累加直方图的效果比直方图好。
+
+CCDR则没有达到论文所说效果，在s1.jpg中没有得到最相似图片。
 
 \section{实验结论}
 
 从实验结果分析知，对颜色组成基本一致的图像，如两张大海的图像，使用直方图方法判断相似度的结果更能符合人的判断。而对两张河流的图片，虽然图像内容同样都是河水、鹅卵石，因在颜色组成上有较大差异，使用直方图的判断效果不佳。
 
-3种颜色空间和4种相似性度量方法各有差异，可以考虑在进行比较时综合考虑4种方法。
+3种颜色空间和4种相似性度量方法各有差异，可以考虑在进行比较时综合考虑4种方法。CCV、Centering refinement、Color Coherence Distance Refinement也有各自的优点。
 
-通过这次实验，熟悉了颜色表示的方式，对直方图判断颜色相似度也有了初步的了解，达到了实验目的。
+通过这次实验，熟悉了颜色表示的方式，对使用直方图等方法判断颜色相似度也有一定的了解，实现了简单的基于颜色的图像检索，达到了实验目的。
 
 
 \renewcommand{\refname}{参考}
