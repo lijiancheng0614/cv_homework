@@ -114,16 +114,16 @@ def demo3():
     LATEX_STYLE = True
     # process
     fd = open(output_filepath, 'w')
+    # process BGR histogram
     for a, b in compare_pair_list:
-        # process BGR
         img = [cv2.imread(input_filepath[a]), cv2.imread(input_filepath[b])]
         hist = [[cv2.calcHist([img[i]], [k], None, [256], [0, 256]) \
             for k in range(3)] for i in range(2)]
         demo3_process(fd, hist, methods, \
             '{}, {}'.format(input_filepath[a].split(os.sep)[-1], input_filepath[b].split(os.sep)[-1]), LATEX_STYLE)
     fd.write('\n\n')
+    # process HSV histogram
     for a, b in compare_pair_list:
-        # process HSV
         img = [cv2.imread(input_filepath[a]), cv2.imread(input_filepath[b])]
         imgHSV = [cv2.cvtColor(i, cv2.COLOR_BGR2HSV) for i in img]
         hist = [[cv2.calcHist([imgHSV[i]], [0], None, [180], [0, 180])] \
@@ -133,8 +133,8 @@ def demo3():
         demo3_process(fd, hist, methods, \
             '{}, {}'.format(input_filepath[a].split(os.sep)[-1], input_filepath[b].split(os.sep)[-1]), LATEX_STYLE)
     fd.write('\n\n')
+    # process CIELab histogram
     for a, b in compare_pair_list:
-        # process CIELab
         img = [cv2.imread(input_filepath[a]), cv2.imread(input_filepath[b])]
         imgLAB = [cv2.cvtColor(i, cv2.COLOR_BGR2LAB) for i in img]
         hist = [[] for i in range(2)]
@@ -144,13 +144,26 @@ def demo3():
         demo3_process(fd, hist, methods, \
             '{}, {}'.format(input_filepath[a].split(os.sep)[-1], input_filepath[b].split(os.sep)[-1]), LATEX_STYLE)
     fd.write('\n\n')
+    # process RGB cumulative histogram
     for a, b in compare_pair_list:
-        # process RGB cumulative histogram
         img = [cv2.imread(input_filepath[a]), cv2.imread(input_filepath[b])]
         hist = [[cv2.calcHist([img[i]], [k], None, [256], [0, 256]).cumsum() \
             for k in range(3)] for i in range(2)]
         demo3_process(fd, hist, methods, \
             '{}, {}'.format(input_filepath[a].split(os.sep)[-1], input_filepath[b].split(os.sep)[-1]), LATEX_STYLE)
+    fd.write('\n\n')
+    # process comparing CCV with L1 distance
+    from ccv import CCV
+    for a, b in compare_pair_list:
+        ccv = [CCV(input_filepath[a]).get_vector(), \
+            CCV(input_filepath[b]).get_vector()]
+        l1_distance = 0
+        for i in range(len(ccv[0])):
+            l1_distance += abs(ccv[0][i][0] - ccv[1][i][0]) + \
+                abs(ccv[0][i][1] - ccv[1][i][1])
+        caption = '{}, {}'.format(input_filepath[a].split(os.sep)[-1], input_filepath[b].split(os.sep)[-1])
+        fd.write('{}\n'.format(caption))
+        fd.write('{}\n'.format(l1_distance))
     fd.write('\n\n')
     fd.close()
 

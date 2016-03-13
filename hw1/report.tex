@@ -443,10 +443,19 @@ Python Library:
     \end{tabular}
 \end{table}
 
-\item CCV直方图对比
+\item CCV对比
 
 CCV即颜色聚合向量（Color Coherence Vector）\textsuperscript{\cite{ref1}}，主要作用是将颜色簇划分成聚合的和非聚合，以此来解决颜色直方图无法表达图像色彩的空间位置的缺点。
-结果如表16-20所示。
+结果如表16所示。
+
+\begin{table}[h!]
+    \centering
+    \caption{CCV对比}
+    \begin{tabular}{cccccc}
+         & r1, r1 & r1, r2 & s1, s2 & r1, s1 & r2, s2 \\ \hline
+        CCV-L1 & 0 & 27403 & 76586 & 93222 & 89939 \\
+    \end{tabular}
+\end{table}
 
 \item Centering Refinement
 
