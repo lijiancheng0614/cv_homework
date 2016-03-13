@@ -99,6 +99,7 @@ CIElab：忽略亮度L通道，并且将a及b通道量化为50个区间。
 
 Python Library:
 
+\vspace{-6pt}
 \begin{itemize}
 
 \setlength{\itemsep}{0pt}
@@ -228,6 +229,8 @@ Python Library:
 比较图片对分别使用r1.jpg自身比较、r1.jpg与r2.jpg、s1.jpg与s2.jpg、r1.jpg与s1.jpg、r2.jpg与s2.jpg。
 
 具体步骤为：读取图片，转换相应的颜色空间，获取直方图并归一化（normalize），使用相似性度量方法计算。
+
+结果通过若干表格呈现出来，关于结果将在下一节基于颜色的图像检索中进行详细的分析。
 
 具体实现见\lstinline[language=bash]{hw1.py的demo3()}。
 
@@ -510,7 +513,7 @@ Color Coherence Distance Refinement指论文\cite{ref2}中的Successive Refineme
 
 这里使用RGB颜色直方图、HSV量化后的颜色直方图、RGB颜色累加直方图、CCV、Centering Refinement、Color Coherence Distance Refinement这6种方法进行图像检索。其中，前三种方法分别使用Correlation、Intersection、Chi-Square statistic、Bhattacharyya4种方法进行相似性度量，后三种方法使用L1距离进行相似性度量。
 
-由于图片集只有r1.jpg, r2.jpg, s1.jpg, s2.jpg、r1.jpg与s1.jpg、r2.jpg与s2.jpg这4张图片，故这里对每张图片、每种方法都检索一张图片，并以表格的形式呈现结果。
+由于图片集只有r1.jpg, r2.jpg, s1.jpg, s2.jpg这4张图片，故这里对每张图片、每种方法都检索一张图片，并以表格的形式呈现结果。
 
 具体实现见\lstinline[language=bash]{hw1.py的demo4()}。
 
@@ -518,13 +521,13 @@ Color Coherence Distance Refinement指论文\cite{ref2}中的Successive Refineme
 
 \begin{table}[h!]
     \centering
-    \caption{CBIR}
+    \caption{基于颜色的图像检索结果}
     \begin{tabular}{ccccccc}
-        method & compare_method & r1 & r2 & s1 & s2 \\ \hline
-        RGB直方图    & Correlation   & r2 & r1 & s2 & s1 \\ \hline
-        RGB直方图    & Intersection  & r2 & r1 & s2 & s1 \\ \hline
-        RGB直方图    & Chi-Square    & r2 & s2 & r2 & s1 \\ \hline
-        RGB直方图    & Bhattacharyya & r2 & r1 & s2 & s1 \\ \hline
+        方法 & 距离计算方法 & r1 & r2 & s1 & s2 \\ \hline
+        RGB直方图     & Correlation   & r2 & r1 & s2 & s1 \\ \hline
+        RGB直方图     & Intersection  & r2 & r1 & s2 & s1 \\ \hline
+        RGB直方图     & Chi-Square    & r2 & s2 & r2 & s1 \\ \hline
+        RGB直方图     & Bhattacharyya & r2 & r1 & s2 & s1 \\ \hline
         HSV量化直方图 & Correlation   & r2 & r1 & s2 & s1 \\ \hline
         HSV量化直方图 & Intersection  & r2 & r1 & r2 & s1 \\ \hline
         HSV量化直方图 & Chi-Square    & s1 & s2 & s2 & r2 \\ \hline
@@ -533,9 +536,9 @@ Color Coherence Distance Refinement指论文\cite{ref2}中的Successive Refineme
         RGB累加直方图 & Intersection  & r2 & r1 & s2 & s1 \\ \hline
         RGB累加直方图 & Chi-Square    & r2 & r1 & s2 & s1 \\ \hline
         RGB累加直方图 & Bhattacharyya & r2 & r1 & s2 & s1 \\ \hline
-        CCV         & L1            & r2 & r1 & s2 & s1 \\ \hline
-        CR          & L1            & r2 & r1 & s2 & s1 \\ \hline
-        CCDR        & L1            & r2 & r1 & r2 & s1 \\ \hline
+        CCV           & L1            & r2 & r1 & s2 & s1 \\ \hline
+        CR            & L1            & r2 & r1 & s2 & s1 \\ \hline
+        CCDR          & L1            & r2 & r1 & r2 & s1 \\ \hline
     \end{tabular}
 \end{table}
 
