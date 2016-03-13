@@ -232,6 +232,48 @@ def demo3_CRH(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE):
         fd.write(r'\end{table}')
     fd.write('\n\n')
 
+def demo3_CCDR(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE):
+    from ccdr import CCDR
+    caption = 'Color Coherence Distance Refinement-L1'
+    if LATEX_STYLE:
+        fd.write(r'\begin{table}[h!]')
+        fd.write('\n')
+        fd.write(r'    \centering')
+        fd.write('\n')
+        fd.write('    \caption{{{}}}'.format(caption))
+        fd.write('\n')
+        fd.write(r'    \begin{tabular}{ccccc}')
+        fd.write('\n')
+        fd.write(r'         & r1 & r2 & s1 & s2 \\ \hline')
+        fd.write('\n')
+    else:
+        fd.write('{}\n'.format(caption))
+        fd.write('{:8} {:8} {:8} {:8} {:8}\n'.format('', 'r1', 'r2', 's1', 's2'))
+    for a in range(len(input_filepath)):
+        if LATEX_STYLE:
+            fd.write('        {}'.format(input_filepath[a].split(os.sep)[-1].rstrip('.jpg')))
+        else:
+            fd.write('{:8}'.format(input_filepath[a].split(os.sep)[-1].rstrip('.jpg')))
+        for b in range(len(input_filepath)):
+            ccdr = [CCDR(input_filepath[a]).get_vector(), \
+                CCDR(input_filepath[b]).get_vector()]
+            l1_distance = 0
+            for i in range(len(ccdr[0])):
+                for j in range(4):
+                    l1_distance += abs(ccdr[0][i][j] - ccdr[1][i][j])
+            if LATEX_STYLE:
+                fd.write(' & {}'.format(l1_distance))
+            else:
+                fd.write('{:8}'.format(l1_distance))
+        if LATEX_STYLE:
+            fd.write(r' \\ \hline')
+        fd.write('\n')
+    if LATEX_STYLE:
+        fd.write(r'    \end{tabular}')
+        fd.write('\n')
+        fd.write(r'\end{table}')
+    fd.write('\n\n')
+
 def demo3():
     # setting
     input_filepath = ['r1.jpg', 'r2.jpg', 's1.jpg', 's2.jpg']
@@ -251,6 +293,7 @@ def demo3():
     demo3_BGRch(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE)
     demo3_CCV(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE)
     demo3_CRH(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE)
+    demo3_CCDR(compare_pair_list, input_filepath, fd, methods, LATEX_STYLE)
     # process comparing Centering Refinement RGB histogram with L1 distance
     fd.close()
 
