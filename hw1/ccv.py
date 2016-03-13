@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 """
+Color Coherence Vector
 1. Blur the image
    replacing each pixel value with the average value of the local neighborhood
    (including 8 adjacent pixels)

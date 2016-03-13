@@ -446,20 +446,40 @@ Python Library:
 \item CCV对比
 
 CCV即颜色聚合向量（Color Coherence Vector）\textsuperscript{\cite{ref1}}，主要作用是将颜色簇划分成聚合的和非聚合，以此来解决颜色直方图无法表达图像色彩的空间位置的缺点。
+根据论文\cite{ref2}，这里使用L1距离来比较两张图像RGB颜色空间的CCV，且对给定的4张图像进行两两比较。
 结果如表16所示。
 
 \begin{table}[h!]
     \centering
-    \caption{CCV对比}
-    \begin{tabular}{cccccc}
-         & r1, r1 & r1, r2 & s1, s2 & r1, s1 & r2, s2 \\ \hline
-        CCV-L1 & 0 & 27403 & 76586 & 93222 & 89939 \\
+    \caption{CCV-L1距离对比}
+    \begin{tabular}{ccccc}
+         & r1 & r2 & s1 & s2 \\ \hline
+        r1 & 0 & 27403 & 93222 & 93434 \\ \hline
+        r2 & 27403 & 0 & 77551 & 89939 \\ \hline
+        s1 & 93222 & 77551 & 0 & 76586 \\ \hline
+        s2 & 93434 & 89939 & 76586 & 0 \\ \hline
     \end{tabular}
 \end{table}
 
 \item Centering Refinement
 
-Centering Refinement \textsuperscript{\cite{ref2}}
+Centering Refinement \textsuperscript{\cite{ref2}}，指对图像的颜色直方图中的每个像素，把它分为在图像中心的和不在图像中心的两个部分。在图像中心指在图像中心$75\%$的区域中。
+最后再使用L1距离来比较两张图像经过Centering Refinement的直方图。
+
+为了方便，这里使用中心64\%的区域作为中心区域，即上下左右各\10％的区域不为中心区域。同样，这里对给定的4张图像RGB颜色空间进行两两比较。
+结果如表17所示。
+
+\begin{table}[h!]
+    \centering
+    \caption{Centering Refinement Histogram-L1距离对比}
+    \begin{tabular}{ccccc}
+         & r1 & r2 & s1 & s2 \\ \hline
+        r1 & 0 & 30961 & 91068 & 93438 \\ \hline
+        r2 & 30961 & 0 & 76685 & 89519 \\ \hline
+        s1 & 91068 & 76685 & 0 & 76064 \\ \hline
+        s2 & 93438 & 89519 & 76064 & 0 \\ \hline
+    \end{tabular}
+\end{table}
 
 \item Color Coherence Distance Refinement
 
