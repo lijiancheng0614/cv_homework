@@ -530,7 +530,7 @@ Color Coherence Distance Refinement指论文\cite{ref2}中的Successive Refineme
         RGB直方图     & Bhattacharyya & r2 & r1 & s2 & s1 \\ \hline
         HSV量化直方图 & Correlation   & r2 & r1 & s2 & s1 \\ \hline
         HSV量化直方图 & Intersection  & r2 & r1 & s2 & s1 \\ \hline
-        HSV量化直方图 & Chi-Square    & s2 & s2 & s2 & r1 \\ \hline
+        HSV量化直方图 & Chi-Square    & s2 & r1 & s2 & s1 \\ \hline
         HSV量化直方图 & Bhattacharyya & r2 & r1 & s2 & s1 \\ \hline
         RGB累加直方图 & Correlation   & r2 & r1 & s2 & s1 \\ \hline
         RGB累加直方图 & Intersection  & r2 & r1 & s2 & s1 \\ \hline
@@ -548,15 +548,15 @@ Color Coherence Distance Refinement指论文\cite{ref2}中的Successive Refineme
 
 对r1.jpg，只有HSV量化直方图+Chi-Square没有得到最相似图片。
 
-对r2.jpg，只有RGB和HSV量化直方图+Chi-Square都没有得到最相似图片。
+对r2.jpg，只有RGB直方图+Chi-Square没有得到最相似图片。
 
 对s1.jpg，则是RGB直方图+Chi-Square、CCDR+L1没有得到最相似图片。
 
-对s2.jpg，只有HSV量化直方图+Chi-Square没有得到最相似图片。
+对s2.jpg，全部方法都得到最相似图片。
 
 横向比较知，
 
-HSV量化直方图+Chi-Square效果最不好。Chi-Square相对其它方法效果没那么好，HSV量化直方图没有RGB直方图效果好，累加直方图的效果比直方图好。
+Chi-Square相对其它方法效果没那么好，累加直方图的效果比直方图好。
 
 CCDR则没有达到论文所说效果，在s1.jpg中没有得到最相似图片。
 
