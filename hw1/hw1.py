@@ -316,9 +316,9 @@ def compare_hist(query_image, image_set, hist_type, method):
         # HSV
         imgHSV = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         imgHSV_set = [cv2.cvtColor(i, cv2.COLOR_BGR2HSV) for i in img_set]
-        hist = cv2.calcHist([img], [0, 1], None, [180, 256], [0, 180, 0, 256])
+        hist = cv2.calcHist([img], [0, 1], None, [8, 8], [0, 180, 0, 256])
         cv2.normalize(hist, hist)
-        hist_set = [cv2.calcHist([i], [0, 1], None, [180, 256], [0, 180, 0, 256]) \
+        hist_set = [cv2.calcHist([i], [0, 1], None, [8, 8], [0, 180, 0, 256]) \
             for i in img_set]
         for i in hist_set:
             cv2.normalize(i, i)
@@ -416,7 +416,7 @@ def demo4():
     fd.write('\n\n')
     fd.close()
 
-# demo1()
-# demo2()
-# demo3()
+demo1()
+demo2()
+demo3()
 demo4()
