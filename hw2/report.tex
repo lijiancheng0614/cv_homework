@@ -1,0 +1,220 @@
+\documentclass[a4paper, 12pt, UTF8]{article}
+
+\usepackage{xeCJK}
+\setCJKmainfont[BoldFont={SimHei},ItalicFont={KaiTi}]{SimSun}
+
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{indentfirst}
+\usepackage{listings}
+\lstset{
+    columns=flexible,
+    breakatwhitespace=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    stepnumber=1,
+    rulecolor=\color{black},
+    tabsize=2,
+    texcl=true,
+    escapeinside={\%*}{*)},
+    extendedchars=false,
+    mathescape=true,
+}
+
+\usepackage[colorlinks, citecolor=red]{hyperref}
+
+\setlength{\evensidemargin}{-0.05in}
+\setlength{\oddsidemargin}{-0.05in}
+\setlength{\headheight}{-0.2in}
+\setlength{\headsep}{0in}
+\setlength{\textheight}{9.75in}
+\setlength{\textwidth}{6.5in}
+\setlength{\parindent}{2em}
+
+\renewcommand{\baselinestretch}{1.5}
+
+\begin{document}
+
+\title{计算机视觉第2次作业}
+\author{黎健成}
+\date{2015210936}
+\maketitle
+
+% --------------------------------
+\section{实验目的}
+
+\begin{enumerate}
+
+\item 熟悉3D特征。
+
+\item 使用人体动作识别数据库进行实验。
+
+\end{enumerate}
+
+
+% --------------------------------
+\section{实验要求}
+
+\begin{enumerate}
+
+\item 根据自身能力和兴趣情况，选择以下四种：
+
+1、课件基本内容（基于光流及多特征的动作识别）
+
+2、A compact optical flow based motion representation for real-time action recognition in surveillance scenes
+(ICIP 2009)
+
+3、Human action recognition in video via fused optical flow and moment features - Towards a hierarchical approach to complex scenario recognition
+(MMM 2014)
+
+4、Action recognition with improved trajectories
+(ICCV 2013)
+
+\item 采用课件中数据库，但不限，对比课件中算法精度，详细列出算法流程。
+
+\item 鼓励采用新方法，以精度更高为目标。
+
+\end{enumerate}
+
+
+% --------------------------------
+\section{实验环境}
+
+操作系统：Ubuntu 14.04.3 LTS
+
+开发环境：Python 2.7.6 + OpenCV 2.4.11
+
+Python Library: Scikit-learn 0.17, numpy 1.10.2
+
+
+% --------------------------------
+\section{实验过程}
+
+% ================================
+\subsection{实验问题}
+
+给定若干不同类别动作的视频，训练一个模型，预测未知动作类别的视频包含的动作。
+
+
+% ================================
+\subsection{实验解决方案}
+
+实验解决过程按以下步骤进行：
+
+\begin{enumerate}
+
+\item 提取视频特征
+
+\item 训练分类模型
+
+\item 测试并计算准确率
+
+\end{enumerate}
+
+\subsubsection{提取视频特征}
+
+这里使用HOF（Histograms of optical flow）特征，参考文献\cite{ref1}，调用OpenCV中的\lstinline[language=Python]{cv2.calcOpticalFlowFarneback()}方法\textsuperscript{\cite{ref2}}——即使用Farneback方法获取每相邻两帧的光流信息；之后再计算直方图、方差等数据并合并成特征向量。
+
+具体实现见\lstinline{hw2.py的__get_features()、video_features.py、optical_flow.py}。
+
+\subsubsection{训练分类模型}
+
+下载数据集，并根据网站信息把数据集分为训练集、验证集（可选）、测试集。
+
+对训练集中每个视频提取特征向量，构成一个$m \times p$的矩阵，其中$m$表示视频的数量，$p$表示特征的长度。
+
+调用Scikit-learn中的\lstinline[language=Python]{sklearn.multiclass.OneVsRestClassifier(sklearn.svm.LinearSVC())}方法\textsuperscript{\cite{ref3} \cite{ref4}}——即使用训练集的特征和标签训练一个一对多的SVM线性分类器。
+
+具体实现见\lstinline{hw2.py的train()}。
+
+\subsubsection{测试并计算准确率}
+
+对测试集中每个视频提取特征向量，构成一个$n \times p$的矩阵，其中$n$表示视频的数量，$p$表示特征的长度。
+
+使用训练时得到的分类器进行预测，并调用Scikit-learn中的\lstinline[language=Python]{sklearn.metrics.accuracy_score()}方法\textsuperscript{\cite{ref5}}计算准确率。
+
+具体实现见\lstinline{hw2.py的test()}。
+
+
+% ================================
+\subsection{实验数据集}
+
+\subsubsection{KTH数据集}
+
+KTH数据集下载地址：\url{http://www.nada.kth.se/cvap/actions/}
+
+KTH数据集有599段视频，包括6类动作：走（walking），慢跑（jogging），跑步（running），拳击（boxing），摇手（hand waving），鼓掌（hand clapping）。每类动作由25个不同的人分别在4个不同的场景（室外、室外放大、室外且穿不同颜色的衣服、室内）下完成。视频中背景相对静止，运动变化较小。
+
+实验把数据集分为3个部分：训练集（8个人）、验证集（8个人）、测试集（9个人）。故训练集应有$8 \times 4 \times 6 = 192$个视频，验证集也有$192$个视频，测试集有$9 \times 4 \times 6 = 216$个视频，但其中训练集有一个视频（person13\_handclapping\_d3）缺失。
+
+\subsubsection{Youtube数据集}
+
+Youtube数据集下载地址：\url{http://crcv.ucf.edu/data/UCF_YouTube_Action.php}
+
+Youtube数据集包括11类动作：篮球射球（basketball shooting），自行车（biking/cycling），划水（diving），挥高尔夫杆（golf swinging），马术表演（horse back riding），足球跑（soccer juggling），挥舞（swinging），挥网球拍（tennis swinging），跳蹦蹦床（trampoline jumping），排球扣球（volleyball spiking），遛狗行走（walking with a dog）。每类动作分为具有公共特征的25个组，每组。视频中背景较杂乱，运动变化较大。
+
+\subsubsection{Hollywood2数据集}
+
+Hollywood2数据集下载地址：\url{http://www.di.ens.fr/~laptev/actions/hollywood2/}
+
+Hollywood2数据集包括12类动作：打电话（AnswerPhone），开车（DriveCar），吃饭（Eat），打架（FightPerson），下车（GetOutCar），握手（HandShake），拥抱（HugPerson），接吻（Kiss），跑步（Run），坐下（SitDown），仰卧起坐（SitUp），起立（StandUp）。视频由69个不同的好莱坞电影中截取而成。
+
+% ================================
+\subsection{实验结果}
+
+\subsubsection{KTH数据集}
+
+对测试集，准确率为$58.8\%$，表[\ref{table_kth}]列出了不同类别预测的结果。
+
+可见，对部分类别（boxing, handwaving）准确率较高，而部分类别（running, jogging）则准确率较低。从视频内容分析，可知running与jogging等部分类别较易混淆，故不容易预测。从方法上来考虑，在计算HOF特征时直接使用整段视频来处理，存在背景混淆、无用帧等问题。
+
+与当前许多方法相比，准确率较低，仍需改进。如考虑先提取人的bounding box再进行提取HOF特征等。
+
+\begin{table}[h!]
+    \centering
+    \caption{KTH数据集不同类别预测结果}
+    \label{table_kth}
+    \begin{tabular}{cccc}
+        类别 & 测试集中视频数量 & 预测正确数量 & 准确率 \\ \hline
+        boxing       & 36  & 33  & 91.7\% \\
+        handclapping & 36  & 20  & 55.6\% \\
+        handwaving   & 36  & 22  & 61.1\% \\
+        jogging      & 36  & 16  & 44.4\% \\
+        running      & 36  & 15  & 41.7\% \\
+        walking      & 36  & 21  & 58.3\% \\
+        all          & 216 & 127 & 58.8\%
+    \end{tabular}
+\end{table}
+ 
+
+\subsubsection{Youtube数据集}
+
+这个数据集的数据量较大，暂时还未完成。
+
+\subsubsection{Hollywood2数据集}
+
+这个数据集的数据量较大，暂时还未完成。
+
+% --------------------------------
+\section{实验感想}
+
+通过这次实验，熟悉了光流、动作识别等，对分类器的使用也有一定的了解，实现了简单的基于视频特征的动作识别，基本达到了实验目的。
+
+
+% --------------------------------
+\renewcommand{\refname}{参考}
+\begin{thebibliography}{9}
+\bibitem{ref1} Chaudhry R, Ravichandran A, Hager G, et al. Histograms of oriented optical flow and binet-cauchy kernels on nonlinear dynamical systems for the recognition of human actions[C]//Computer Vision and Pattern Recognition, 2009. CVPR 2009. IEEE Conference on. IEEE, 2009: 1932-1939.
+\bibitem{ref2} Optical Flow. opencv dev team. 最后修订于2014年11月10日.  \url{http://docs.opencv.org/3.0-beta/doc/py_tutorials/py_video/py_lucas_kanade/py_lucas_kanade.html}
+\bibitem{ref3} Multiclass and multilabel algorithms. scikit-learn developers. \url{http://scikit-learn.org/stable/modules/multiclass.html#one-vs-the-rest}
+\bibitem{ref4} Support Vector Machines. scikit-learn developers. \url{http://scikit-learn.org/stable/modules/svm.html}
+\bibitem{ref5} Model evaluation: quantifying the quality of predictions. scikit-learn developers. \url{http://scikit-learn.org/stable/modules/model_evaluation.html#classification-metrics}
+\end{thebibliography}
+
+\end{document}

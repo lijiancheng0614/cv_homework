@@ -4,7 +4,7 @@
 import os
 import time
 import pickle
-from sklearn.svm import SVC
+from sklearn.svm import LinearSVC
 from sklearn.metrics import accuracy_score
 from sklearn.multiclass import OneVsRestClassifier
 
@@ -23,7 +23,7 @@ class Solver(object):
         filepath = os.path.join(self.dataset_path, 'train_features.pickle')
         train_features = self.__get_features(train_videos, filepath)
         # train classifier
-        classifier = OneVsRestClassifier(SVC())
+        classifier = OneVsRestClassifier(LinearSVC())
         classifier.fit(train_features, train_labels)
         if self.verbose:
             print('{} train done.'.format(time.ctime()))
