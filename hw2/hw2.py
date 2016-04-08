@@ -4,9 +4,12 @@
 import os
 import time
 import pickle
-from sklearn.svm import LinearSVC
 from sklearn.metrics import accuracy_score
 from sklearn.multiclass import OneVsRestClassifier
+from sklearn.svm import LinearSVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
 
 from video_features import VideoFeatures
 
@@ -15,7 +18,7 @@ class Solver(object):
         self.dataset_name = dataset_name
         self.dataset_path = '{}{sep}dataset{sep}{}{sep}'.format(os.getcwd(), dataset_name, sep=os.sep)
         self.verbose = verbose
-    def train(self):
+    def train(self, estimator):
         if self.verbose:
             print('{} train...'.format(time.ctime()))
         # load data
@@ -23,7 +26,7 @@ class Solver(object):
         filepath = os.path.join(self.dataset_path, 'train_features.pickle')
         train_features = self.__get_features(train_videos, filepath)
         # train classifier
-        classifier = OneVsRestClassifier(LinearSVC())
+        classifier = OneVsRestClassifier(estimator)
         classifier.fit(train_features, train_labels)
         if self.verbose:
             print('{} train done.'.format(time.ctime()))
@@ -38,7 +41,17 @@ class Solver(object):
         # predict
         predict_labels = classifier.predict(test_features)
         if self.verbose:
-            pickle.dump(predict_labels, open('predict_labels.pickle', 'wb'))
+            d = dict()
+            for i in range(len(test_labels)):
+                y = test_labels[i]
+                if y not in d:
+                    d[y] = [0, 0]
+                d[y][0] += 1
+                if y == predict_labels[i]:
+                    d[y][1] += 1
+            width = max([len(i) for i in d.keys()])
+            for k in d.keys():
+                print('{} {} {} {}'.format(k.center(width), d[k][0], d[k][1], float(d[k][1]) / d[k][0]))
             print('{} test done.'.format(time.ctime()))
         return accuracy_score(test_labels, predict_labels)
     def __load_data(self, filename):
@@ -82,12 +95,14 @@ if __name__ == "__main__":
     print(time.ctime())
     # dataset_list = ['KTH', 'Youtube', 'Hollywood2']
     dataset_list = ['KTH']
+    estimators = [LinearSVC(), KNeighborsClassifier(), AdaBoostClassifier(), DecisionTreeClassifier()]
     for dataset_name in dataset_list:
         print('{} {}'.format(time.ctime(), dataset_name))
         solver = Solver(dataset_name)
-        classifier = solver.train()
-        pickle.dump(classifier, open('classifier.pickle', 'wb'))
-        # classifier = pickle.load(open('classifier.pickle', 'rb'))
-        print(solver.test(classifier))
+        for estimator in estimators:
+            classifier = solver.train(estimator)
+            # pickle.dump(classifier, open('classifier.pickle', 'wb'))
+            # classifier = pickle.load(open('classifier.pickle', 'rb'))
+            print('{} {}'.format(estimator.__class__, solver.test(classifier)))
     
     print(time.ctime())

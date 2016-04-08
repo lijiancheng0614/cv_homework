@@ -119,7 +119,7 @@ Python Library: Scikit-learn 0.17, numpy 1.10.2
 
 \subsubsection{提取视频特征}
 
-这里使用HOF（Histograms of optical flow）特征，参考文献\cite{ref1}，调用OpenCV中的\lstinline[language=Python]{cv2.calcOpticalFlowFarneback()}方法\textsuperscript{\cite{ref2}}——即使用Farneback方法获取每相邻两帧的光流信息；之后再计算直方图、方差等数据并合并成特征向量。
+这里使用HOF（Histograms of optical flow）特征，参考文献\cite{ref1}，调用OpenCV中的\lstinline[language=Python]{cv2.calcOpticalFlowFarneback()}方法\textsuperscript{\cite{ref2}}——即使用Farneback方法获取每相邻两帧的光流信息；之后再计算直方图、方差等数据，而这里为了方便，直接对每两帧获得的光流信息取平均并合并成特征向量。
 
 具体实现见\lstinline{hw2.py的__get_features()、video_features.py、optical_flow.py}。
 
@@ -129,7 +129,11 @@ Python Library: Scikit-learn 0.17, numpy 1.10.2
 
 对训练集中每个视频提取特征向量，构成一个$m \times p$的矩阵，其中$m$表示视频的数量，$p$表示特征的长度。
 
-调用Scikit-learn中的\lstinline[language=Python]{sklearn.multiclass.OneVsRestClassifier(sklearn.svm.LinearSVC())}方法\textsuperscript{\cite{ref3} \cite{ref4}}——即使用训练集的特征和标签训练一个一对多的SVM线性分类器。
+调用Scikit-learn中的sklearn.multiclass.OneVsRestClassifier\textsuperscript{\cite{ref3}}——即使用训练集的特征和标签训练一个一对多的分类器。其中的估计器（estimator）分别使用Scikit-learn提供的
+sklearn.svm.LinearSVC\textsuperscript{\cite{ref4}}、
+sklearn.neighbors.KNeighborsClassifier\textsuperscript{\cite{ref5}}、
+sklearn.ensemble.AdaBoostClassifier\textsuperscript{\cite{ref6}}、
+sklearn.tree.DecisionTreeClassifier\textsuperscript{\cite{ref7}}。
 
 具体实现见\lstinline{hw2.py的train()}。
 
@@ -137,7 +141,7 @@ Python Library: Scikit-learn 0.17, numpy 1.10.2
 
 对测试集中每个视频提取特征向量，构成一个$n \times p$的矩阵，其中$n$表示视频的数量，$p$表示特征的长度。
 
-使用训练时得到的分类器进行预测，并调用Scikit-learn中的\lstinline[language=Python]{sklearn.metrics.accuracy_score()}方法\textsuperscript{\cite{ref5}}计算准确率。
+使用训练时得到的分类器进行预测，并调用Scikit-learn中的\lstinline[language=Python]{sklearn.metrics.accuracy_score()}方法\textsuperscript{\cite{ref8}}计算准确率。
 
 具体实现见\lstinline{hw2.py的test()}。
 
@@ -170,16 +174,26 @@ Hollywood2数据集包括12类动作：打电话（AnswerPhone），开车（Dri
 
 \subsubsection{KTH数据集}
 
-对测试集，准确率为$58.8\%$，表[\ref{table_kth}]列出了不同类别预测的结果。
+对测试集，表[\ref{table_kth}]列出了不同分类器预测的结果，表[\ref{table_kth_svc}]列出了使用LinearSVC预测不同类别的结果。
 
 可见，对部分类别（boxing, handwaving）准确率较高，而部分类别（running, jogging）则准确率较低。从视频内容分析，可知running与jogging等部分类别较易混淆，故不容易预测。从方法上来考虑，在计算HOF特征时直接使用整段视频来处理，存在背景混淆、无用帧等问题。
 
-与当前许多方法相比，准确率较低，仍需改进。如考虑先提取人的bounding box再进行提取HOF特征等。
+与当前许多方法相比，准确率较低，仍需改进。如考虑先提取人的bounding box再进行提取HOF特征等，参考文献\cite{ref9}，可提取trajectory, HOG, HOF, MBH等特征，并使用k-means等方法合并这些特征。
 
 \begin{table}[h!]
     \centering
     \caption{KTH数据集不同类别预测结果}
     \label{table_kth}
+    \begin{tabular}{ccccc}
+        分类器 & LinearSVC & KNeighborsClassifier & AdaBoostClassifier & DecisionTreeClassifier \\ \hline
+        准确率 & 58.8\% & 54.6\% & 54.2\% & 37.5\%
+    \end{tabular}
+\end{table}
+
+\begin{table}[h!]
+    \centering
+    \caption{KTH数据集使用LinearSVC预测不同类别的结果}
+    \label{table_kth_svc}
     \begin{tabular}{cccc}
         类别 & 测试集中视频数量 & 预测正确数量 & 准确率 \\ \hline
         boxing       & 36  & 33  & 91.7\% \\
@@ -191,7 +205,7 @@ Hollywood2数据集包括12类动作：打电话（AnswerPhone），开车（Dri
         all          & 216 & 127 & 58.8\%
     \end{tabular}
 \end{table}
- 
+
 
 \subsubsection{Youtube数据集}
 
@@ -213,8 +227,12 @@ Hollywood2数据集包括12类动作：打电话（AnswerPhone），开车（Dri
 \bibitem{ref1} Chaudhry R, Ravichandran A, Hager G, et al. Histograms of oriented optical flow and binet-cauchy kernels on nonlinear dynamical systems for the recognition of human actions[C]//Computer Vision and Pattern Recognition, 2009. CVPR 2009. IEEE Conference on. IEEE, 2009: 1932-1939.
 \bibitem{ref2} Optical Flow. opencv dev team. 最后修订于2014年11月10日.  \url{http://docs.opencv.org/3.0-beta/doc/py_tutorials/py_video/py_lucas_kanade/py_lucas_kanade.html}
 \bibitem{ref3} Multiclass and multilabel algorithms. scikit-learn developers. \url{http://scikit-learn.org/stable/modules/multiclass.html#one-vs-the-rest}
-\bibitem{ref4} Support Vector Machines. scikit-learn developers. \url{http://scikit-learn.org/stable/modules/svm.html}
-\bibitem{ref5} Model evaluation: quantifying the quality of predictions. scikit-learn developers. \url{http://scikit-learn.org/stable/modules/model_evaluation.html#classification-metrics}
+\bibitem{ref4} sklearn.svm.LinearSVC. scikit-learn developers. \url{http://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC.html}
+\bibitem{ref5} sklearn.neighbors.KNeighborsClassifier. scikit-learn developers. \url{http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html}
+\bibitem{ref6} sklearn.ensemble.AdaBoostClassifier. scikit-learn developers. \url{http://scikit-learn.org/stable/modules/generated/sklearn.ensemble.AdaBoostClassifier.html}
+\bibitem{ref7} sklearn.tree.DecisionTreeClassifier. scikit-learn developers. \url{http://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html}
+\bibitem{ref8} Model evaluation: quantifying the quality of predictions. scikit-learn developers. \url{http://scikit-learn.org/stable/modules/model_evaluation.html#classification-metrics}
+\bibitem{ref9} Wang H, Schmid C. Action recognition with improved trajectories[C]//Proceedings of the IEEE International Conference on Computer Vision. 2013: 3551-3558.
 \end{thebibliography}
 
 \end{document}
