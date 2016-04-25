@@ -129,11 +129,15 @@ Python Library: Scikit-learn 0.17, numpy 1.10.2
 
 对训练集中每个视频提取特征向量，构成一个$m \times p$的矩阵，其中$m$表示视频的数量，$p$表示特征的长度。
 
-调用Scikit-learn中的sklearn.multiclass.OneVsRestClassifier\textsuperscript{\cite{ref3}}——即使用训练集的特征和标签训练一个一对多的分类器。其中的估计器（estimator）分别使用Scikit-learn提供的
-sklearn.svm.LinearSVC\textsuperscript{\cite{ref4}}、
-sklearn.neighbors.KNeighborsClassifier\textsuperscript{\cite{ref5}}、
-sklearn.ensemble.AdaBoostClassifier\textsuperscript{\cite{ref6}}、
-sklearn.tree.DecisionTreeClassifier\textsuperscript{\cite{ref7}}。
+调用Scikit-learn中的sklearn.multiclass.OneVsRestClassifier\textsuperscript{\cite{ref3}}——即使用训练集的特征和标签训练一个一对多的分类器。其中的估计器（estimator）分别使用以下Scikit-learn提供的估计器
+
+sklearn.svm.LinearSVC\textsuperscript{\cite{ref4}}
+
+sklearn.neighbors.KNeighborsClassifier\textsuperscript{\cite{ref5}}
+
+sklearn.ensemble.AdaBoostClassifier\textsuperscript{\cite{ref6}}
+
+sklearn.tree.DecisionTreeClassifier\textsuperscript{\cite{ref7}}
 
 具体实现见\lstinline{hw2.py的train()}。
 
