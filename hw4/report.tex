@@ -1,0 +1,244 @@
+\documentclass[a4paper, 12pt, UTF8]{article}
+
+\usepackage{xeCJK}
+\setCJKmainfont[BoldFont={SimHei},ItalicFont={KaiTi}]{SimSun}
+
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{indentfirst}
+\usepackage{listings}
+\lstset{
+    columns=flexible,
+    breakatwhitespace=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    stepnumber=1,
+    rulecolor=\color{black},
+    tabsize=2,
+    texcl=true,
+    escapeinside={\%*}{*)},
+    extendedchars=false,
+    mathescape=true,
+}
+
+\usepackage[colorlinks, citecolor=red]{hyperref}
+
+\setlength{\evensidemargin}{-0.05in}
+\setlength{\oddsidemargin}{-0.05in}
+\setlength{\headheight}{-0.2in}
+\setlength{\headsep}{0in}
+\setlength{\textheight}{9.75in}
+\setlength{\textwidth}{6.5in}
+% \setlength{\parindent}{2em}
+\usepackage{cjkindent}
+
+\renewcommand{\baselinestretch}{1.5}
+
+\begin{document}
+
+\title{计算机视觉第4次作业}
+\author{黎健成}
+\date{2015210936}
+\maketitle
+
+% --------------------------------
+\section{实验目的}
+
+掌握摄像机标定方法，使用张正友标定方法\textsuperscript{\cite{ref1}}进行图像校正。
+
+
+% --------------------------------
+\section{实验要求}
+
+1. 获得靶标平面与其图像平面间的映射矩阵
+
+2. 求解摄像机内参数矩阵和外参数矩阵
+
+3. 估计镜头畸变
+
+4. 进行参数精炼
+
+5. 分析实验结果
+
+% --------------------------------
+\section{实验环境}
+
+操作系统：Ubuntu 14.04.3 LTS
+
+开发环境：Anaconda2-4.0.0, OpenCV 2.4.11
+
+% --------------------------------
+\section{实验问题}
+
+给定若干张图片，计算畸变系数、内参数矩阵和外参数矩阵。
+
+
+% --------------------------------
+\section{实验解决方案}
+
+
+% ================================
+\subsection{相关定义}
+
+如今的廉价针孔相机产生了大量的图像失真。两个主要的失真是径向畸变和切向畸变。
+
+由于径向畸变，直线将出现弯曲。例如，在一张带有国际象棋的图像中，两侧边界不平行。对于这种失真，通过如下公式解决：
+$$x_{\text{corrected}} = x ( 1 + k_1 r^2 + k_2 r^4 + k_3 r^6 )$$
+$$y_{\text{corrected}} = y ( 1 + k_1 r^2 + k_2 r^4 + k_3 r^6 )$$
+
+类似地，切向畸变产生的原因是摄镜头与图像平面不完全平行对齐。所以图像中的一些区域可能看起来比预期更接近。它通过如下公式解决：
+$$x_{\text{corrected}} = x + [ 2p_1xy + p_2 (r^2 + 2x^2) ]$$
+$$y_{\text{corrected}} = y + [ p_1(r^2 + 2y^2) + 2p_2xy ]$$
+
+简而言之，我们需要找到五个参数，称为畸变系数（Distortion cofficients）：
+$$\text{Distortion cofficients} = (k_1, k_2, p_1, p_2, k_3)$$
+
+此外，我们需要找到更多的信息，比如摄像机的内参数和外参数。内参数是与一台特定的相机相关的参数，它包括如焦距$(f_x, f_y)$、光学中心$(c_x, c_y)$等信息，因此也被称为相机矩阵（camera matrix）。由于它只与相机有关，所以一旦计算，它可以被存储起来供将来使用。它可以用一个$3 \times 3$的矩阵表示：
+$$\text{camera matrix} = \begin{bmatrix} f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix}$$
+
+外参数对应于转化一个三维点坐标到一个坐标系统的旋转和平移向量。
+
+要查找这些参数，我们要做的是提供一些提前定义好的样本图像（如棋盘），然后找到某些特定的点（如在国际象棋棋盘的方角）与现实世界的空间坐标的对应关系。我们称这个操作为摄像机标定。
+
+% ================================
+\subsection{算法实现}
+
+输入一系列的棋盘图片，输出相应的畸变系数、内参数矩阵和外参数矩阵。
+具体实现见\lstinline{hw4.py}，步骤如下：
+
+\begin{itemize}
+
+\item 读取输入图片
+
+读入一系列棋盘图片。
+
+\item 查找棋盘角落点
+
+使用\lstinline[language=Python]{cv2.findChessboardCorners()}即可找到棋盘的角落点（corner）。
+
+\item 增加角落点的准确性
+
+使用\lstinline[language=Python]{cv2.cornerSubPix()}即可增加角落点的准确性。
+
+\item 绘制角落点
+
+使用\lstinline[language=Python]{cv2.drawChessboardCorners()}绘制角落点。
+
+\item 标定（calibration）
+
+使用\lstinline[language=Python]{cv2.calibrateCamera()}进行标定。
+
+输入一个标定图案（这里是棋盘）的多个不同视角，找到相机的内参数和外参数及畸变系数。算法使用张正友标定方法。
+
+算法主要步骤如下：
+
+1. 初始化内参数和畸变系数。
+
+2. 给定内参数，估计相机的初始姿态。
+
+3. 运行全局的Levenberg-Marquardt优化算法来最小化重投影误差，即最小化观测特征点与投影点的之间的距离平方和。
+
+\item 校正（undistortion）
+
+对每一张输入的图像进行校正。首先使用\lstinline[language=Python]{cv2.getOptimalNewCameraMatrix()}进行参数精炼，然后使用\lstinline[language=Python]{cv2.undistort()}进行图像校正。
+
+\end{itemize}
+
+
+% --------------------------------
+\section{实验数据集}
+
+这里使用opencv提供的一系列棋盘图片：\lstinline{https://github.com/Itseez/opencv/tree/master/samples/data/left*.jpg}。
+
+每张图像大小均为$640 \times 480$，包含同一个棋盘的标定图案。
+
+% --------------------------------
+\section{实验结果}
+
+输出的畸变系数、内参数矩阵和外参数矩阵如下：
+
+\begin{lstlisting}
+camera matrix:
+[[ 532.80990767    0.          342.49522241]
+ [   0.          532.93344825  233.88792572]
+ [   0.            0.            1.        ]]
+distortion coefficients:
+[ -2.81325825e-01   2.91151890e-02   1.21234424e-03  -1.40823845e-04
+   1.54861063e-01]
+./data/left01.jpg
+rotation vector: [ 0.16643477  0.27436631  0.01309966].T
+translation vector: [ -3.01603361  -4.3067171   15.89814743].T
+./data/left02.jpg
+rotation vector: [ 0.41705957  0.65497228 -1.33659106].T
+translation vector: [ -2.340185     3.33244685  14.09372759].T
+./data/left03.jpg
+rotation vector: [-0.27992748  0.18688748  0.3548218 ].T
+translation vector: [ -1.59857503  -3.97655053  12.66166695].T
+./data/left04.jpg
+rotation vector: [-0.114183    0.23776102 -0.00242778].T
+translation vector: [ -3.94323477  -2.6513067   13.15766689].T
+./data/left05.jpg
+rotation vector: [-0.29487152  0.42952325  1.31246259].T
+translation vector: [  2.33553189  -4.5722067   12.63392923].T
+./data/left06.jpg
+rotation vector: [ 0.4048479   0.30563854  1.64833062].T
+translation vector: [  6.68485875  -2.57792121  13.36792011].T
+./data/left07.jpg
+rotation vector: [ 0.17465072  0.34620289  1.86816035].T
+translation vector: [  0.7757959   -2.82253787  15.49234179].T
+./data/left08.jpg
+rotation vector: [-0.09365406  0.48151439  1.75275503].T
+translation vector: [  3.15613747  -3.4776855   12.60232127].T
+./data/left09.jpg
+rotation vector: [ 0.199544   -0.42539573  0.13303941].T
+translation vector: [ -2.65680691  -3.20441687  11.05824157].T
+./data/left11.jpg
+rotation vector: [-0.42155866 -0.49719158  1.33659792].T
+translation vector: [  1.87146471  -4.39660912  13.45714174].T
+./data/left12.jpg
+rotation vector: [-0.24157343  0.34844477  1.53044106].T
+translation vector: [  2.02469177  -4.06349774  12.8283411 ].T
+./data/left13.jpg
+rotation vector: [ 0.46480916 -0.28443331  1.23904774].T
+translation vector: [  1.3442995   -3.61753321  11.56758671].T
+./data/left14.jpg
+rotation vector: [-0.17318206 -0.46855317  1.3468689 ].T
+translation vector: [  1.79555109  -4.28671937  12.43466065].T
+\end{lstlisting}
+
+部分图像校正结果如图[\ref{figure_demo}]所示，可以看出，校正之后在现实世界中平行的棋盘线在二维图像中也平行。
+
+\begin{figure}[ht!]
+    \centering
+    \begin{tabular}{cc}
+        \includegraphics[width=0.4\textwidth]{output/left01_chess.png} &
+        \includegraphics[width=0.4\textwidth]{output/left01_chess_undistorted.png} \\
+        \includegraphics[width=0.4\textwidth]{output/left02_chess.png} &
+        \includegraphics[width=0.4\textwidth]{output/left02_chess_undistorted.png} \\
+        \includegraphics[width=0.4\textwidth]{output/left03_chess.png} &
+        \includegraphics[width=0.4\textwidth]{output/left03_chess_undistorted.png}
+    \end{tabular}
+    \caption{部分图像校正结果}
+    \label{figure_demo}
+\end{figure}
+
+% --------------------------------
+\section{实验感想}
+
+通过这次实验，熟悉了摄像机标定方法及标定过程，并用张正友标定方法进行了图像校正，基本达到了实验目的。
+
+
+% --------------------------------
+\renewcommand{\refname}{参考}
+\begin{thebibliography}{9}
+\bibitem{ref1} Zhang Z. A flexible new technique for camera calibration[J]. IEEE Transactions on Pattern Analysis and Machine Intelligence, 2000, 22(11): 1330-1334.
+\bibitem{ref2} Camera Calibration. opencv dev team. 最后修订于2014年11月10日.  \url{http://docs.opencv.org/3.0-beta/doc/py_tutorials/py_calib3d/py_calibration/py_calibration.html}
+\end{thebibliography}
+
+\end{document}
